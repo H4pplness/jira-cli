@@ -21,7 +21,14 @@ A command-line Jira client for teams that work across one or more Atlassian envi
 
 ## Install
 
-Install dependencies:
+Install globally from npm:
+
+```sh
+npm install -g @h4pplness/jira-cli
+jira --help
+```
+
+For local development, install dependencies:
 
 ```sh
 npm install

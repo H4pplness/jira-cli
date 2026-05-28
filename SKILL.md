@@ -1,205 +1,220 @@
 ---
 name: jira-cli
 description: |
-  Hướng dẫn AI agent sử dụng công cụ jira-cli (lệnh `jira`) để thao tác với Jira
-  trực tiếp từ terminal. Kích hoạt skill này bất cứ khi nào người dùng đề cập đến
-  Jira — kể cả khi không nhắc đến "jira-cli". Các tín hiệu trigger bao gồm:
-  - Nhắc đến issue, task, bug, story, epic, sprint trên Jira
-  - Muốn tìm kiếm, xem, tạo, chỉnh sửa, assign, chuyển trạng thái issue/epic
-  - Muốn thêm comment, đổi priority, set due date trên Jira
-  - Muốn xem danh sách project hoặc thông tin project
-  - Bất kỳ thao tác nào liên quan đến Jira, dù là "xem task của tôi hôm nay",
-    "tạo bug cho lỗi này", "chuyển ticket sang Done", hay "assign issue cho ai đó"
-  Đây là skill quan trọng — ưu tiên dùng ngay khi có bất kỳ dấu hiệu nào liên
-  quan đến Jira, không cần người dùng nói rõ "dùng jira-cli".
+  Guide for AI agents using the jira-cli tool (`jira`) to operate Jira directly
+  from the terminal. Use this skill whenever the user mentions Jira, even if
+  they do not explicitly say "jira-cli". Trigger signals include:
+  - Mentions of Jira issues, tasks, bugs, stories, epics, or sprints
+  - Requests to search, view, create, edit, assign, or transition Jira issues/epics
+  - Requests to add comments, change priority, or set due dates in Jira
+  - Requests to list projects or inspect project details
+  - Any Jira-related workflow such as "show my tasks today", "create a bug for
+    this error", "move this ticket to Done", or "assign this issue to someone"
+  This is an important skill. Prefer using it as soon as there is any Jira signal;
+  the user does not need to explicitly ask for jira-cli.
 ---
 
 # Jira CLI Skill
 
-Agent dùng lệnh `jira` (đã cài và cấu hình) để tương tác với Jira Cloud hoặc
-Data Center trực tiếp từ terminal. Mọi thao tác đều thực hiện qua `bash_tool`.
+Use the `jira` command to interact with Jira Cloud or Jira Data Center/Server
+directly from the terminal. Prefer non-interactive commands with explicit flags
+when acting as an agent.
 
 ---
 
-## 0. Kiểm tra trước khi dùng
+## 0. Preflight Check
 
 ```bash
-jira config current   # xem context đang active
+jira config current   # show the active context
 ```
 
-Nếu báo "Chưa có context" → hướng dẫn người dùng chạy `jira login`.
-
----
-
-## 1. Đăng nhập lần đầu
+If there is no active context, ask the user to run:
 
 ```bash
-jira login                    # wizard 3 bước: server → auth → tên context
-jira login --context staging  # đăng nhập thêm môi trường mới
+jira login
 ```
 
-Wizard sẽ hỏi:
-- **Host URL** — vd: `https://company.atlassian.net`
-- **Loại** — Cloud hoặc Data Center/Server
-- **Auth** — Basic (email + API Token) hoặc PAT
-- **Tên context** — vd: `default`, `staging`, `work`
+---
+
+## 1. First Login
+
+```bash
+jira login                    # 3-step wizard: server -> auth -> context name
+jira login --context staging  # add another environment
+```
+
+The wizard asks for:
+- **Host URL**: for example `https://company.atlassian.net`
+- **Deployment type**: Cloud or Data Center/Server
+- **Auth**: Basic (email + API token) or PAT
+- **Context name**: for example `default`, `staging`, `work`
 
 ---
 
-## 2. Tìm kiếm issue
+## 2. Search Issues
 
 ```bash
-# Từ khóa
+# Keyword search
 jira issue search "login bug"
 
-# Filter đơn
+# Single filters
 jira issue search --project PROJ
 jira issue search --assignee me
 jira issue search --status "In Progress"
 jira issue search --type Bug
 
-# Kết hợp nhiều filter
+# Combined filters
 jira issue search --project PROJ --assignee me --type Bug --limit 30
 
-# JQL tùy chỉnh (mạnh nhất, bỏ qua mọi filter khác)
+# Custom JQL. This has the highest priority and ignores other filters.
 jira issue search --jql 'project = PROJ AND sprint in openSprints() ORDER BY priority DESC'
 jira issue search --jql 'assignee = currentUser() AND status != Done ORDER BY updated DESC'
 ```
 
-| Flag | Ví dụ | Ghi chú |
+| Flag | Example | Notes |
 |---|---|---|
 | `--project` | `PROJ` | Project key |
-| `--assignee` | `me` hoặc `user@email.com` | `me` = currentUser() |
-| `--status` | `"In Progress"` | Nháy kép nếu có dấu cách |
-| `--type` | `Bug`, `Story`, `Task`, `Epic` | |
-| `--limit` | `50` | Mặc định 20 |
-| `--jql` | chuỗi JQL | Ưu tiên cao nhất |
-| `--context` | `staging` | Override active context |
+| `--assignee` | `me` or `user@email.com` | `me` becomes `currentUser()` |
+| `--status` | `"In Progress"` | Quote values with spaces |
+| `--type` | `Bug`, `Story`, `Task`, `Epic` | Must be valid for the project |
+| `--limit` | `50` | Default is 20 |
+| `--jql` | JQL string | Highest priority |
+| `--context` | `staging` | Override the active context |
 
 ---
 
-## 3. Xem chi tiết issue
+## 3. View Issue Details
 
 ```bash
-jira issue view PROJ-123              # thông tin cơ bản
-jira issue view PROJ-123 --comments   # kèm toàn bộ comments
+jira issue view PROJ-123              # basic issue details
+jira issue view PROJ-123 --comments   # include comments
 ```
 
-Output gồm: summary, status, priority, assignee, reporter, due date,
-description, subtasks, labels, và (nếu có `--comments`) toàn bộ comment thread.
+Output includes summary, status, priority, assignee, reporter, due date,
+description, subtasks, labels, and comment thread when `--comments` is used.
 
 ---
 
-## 4. Tạo issue mới
+## 4. Create Issues
 
-Nếu không chắc project hỗ trợ issue type nào, kiểm tra trước:
+If you are not sure which issue types are valid for a project, check first:
 
 ```bash
 jira project issue-types PROJ
 ```
 
+Use required flags to avoid interactive prompts:
+
 ```bash
-# Nhanh qua flags — KHUYẾN NGHỊ cho agent (tránh interactive)
-jira issue create --project PROJ --type Task    --summary "Tên task"
-jira issue create --project PROJ --type Bug     --summary "Login bị crash khi dùng OAuth"
-jira issue create --project PROJ --type Story   --summary "User có thể reset mật khẩu"
-jira issue create --project PROJ --type Sub-task --summary "Viết unit test" --parent PROJ-10
+jira issue create --project PROJ --type Task --summary "Task title"
+jira issue create --project PROJ --type Bug --summary "Login crashes when using OAuth"
+jira issue create --project PROJ --type Story --summary "User can reset password"
+jira issue create --project PROJ --type Sub-task --summary "Write unit tests" --parent PROJ-10
 ```
 
-> **Quan trọng:** Luôn truyền đủ `--project`, `--type`, `--summary` khi agent
-> chạy tự động. Thiếu flag → CLI hỏi interactive → terminal bị treo.
+Optional fields can be passed in the same command:
+
+```bash
+jira issue create --project PROJ --type Task --summary "Build API" \
+  --description "Implementation details" \
+  --priority High \
+  --assignee dev@company.com \
+  --due 2025-12-31 \
+  --labels backend,api
+```
+
+Important: always pass `--project`, `--type`, and `--summary` when running as an
+agent. Missing required flags trigger interactive prompts.
 
 ---
 
-## 5. Tạo epic mới
+## 5. Create Epics
 
 ```bash
-jira epic create --project PROJ --summary "Tên epic Q4"
-jira epic create --project PROJ --summary "Tên epic Q4" --description "Mô tả epic" --due 2025-12-31
+jira epic create --project PROJ --summary "Q4 epic"
+jira epic create --project PROJ --summary "Q4 epic" --description "Epic details" --due 2025-12-31
 ```
+
+Always pass `--project` and `--summary` when running as an agent. Missing required
+flags trigger interactive prompts.
 
 ---
 
-## 6. Chỉnh sửa issue
+## 6. Edit Issues
 
 ```bash
-# Từng field riêng lẻ
-jira issue edit PROJ-123 --summary "Tiêu đề mới"
+jira issue edit PROJ-123 --summary "New title"
 jira issue edit PROJ-123 --assignee dev@company.com
 jira issue edit PROJ-123 --priority High
 jira issue edit PROJ-123 --due 2025-12-31
-
-# Kết hợp nhiều field cùng lúc
 jira issue edit PROJ-123 --priority High --assignee dev@company.com --due 2025-12-31
 ```
 
-**Priority hợp lệ:** `Highest` `High` `Medium` `Low` `Lowest`
-**Format ngày:** `YYYY-MM-DD`
+Valid priorities: `Highest`, `High`, `Medium`, `Low`, `Lowest`
+
+Date format: `YYYY-MM-DD`
 
 ---
 
-## 7. Chỉnh sửa epic
+## 7. Edit Epics
 
 ```bash
-jira epic edit PROJ-10 --summary "Tên epic mới"
+jira epic edit PROJ-10 --summary "New epic name"
 jira epic edit PROJ-10 --due 2025-12-31
-jira epic edit PROJ-10 --summary "Tên mới" --due 2025-12-31
+jira epic edit PROJ-10 --summary "New name" --due 2025-12-31
 ```
 
 ---
 
-## 8. Chuyển trạng thái (Transition)
+## 8. Transition Issues
 
 ```bash
-# Chuyển trực tiếp bằng tên status
 jira issue transition PROJ-123 --status "In Progress"
 jira issue transition PROJ-123 --status "In Review"
 jira issue transition PROJ-123 --status Done
 ```
 
-> Tên status phải khớp chính xác với workflow của project (phân biệt hoa thường
-> không bắt buộc nhưng nên đúng). Nếu không chắc tên, chạy
-> `jira issue view PROJ-123` để xem status hiện tại.
+The status name must match a valid transition in the project's workflow. Matching
+is case-insensitive, but use the real Jira status name when possible.
 
 ---
 
-## 9. Thêm comment
+## 9. Add Comments
 
 ```bash
-jira issue comment PROJ-123 --message "Đã fix, cần review lại."
-jira issue comment PROJ-123 --message "Deploy lên staging xong. Link: https://staging.example.com"
+jira issue comment PROJ-123 --message "Fixed, please review again."
+jira issue comment PROJ-123 --message "Deployed to staging. Link: https://staging.example.com"
 ```
 
-> Luôn dùng `--message` khi agent chạy tự động. Bỏ qua flag → CLI mở editor
-> → terminal bị treo.
+Always use `--message` when running as an agent. Omitting it opens an editor.
 
 ---
 
-## 10. Xem epics trong project
+## 10. Epics In A Project
 
 ```bash
 jira epic list --project PROJ
-jira epic view PROJ-10        # chi tiết epic + danh sách issue con
+jira epic view PROJ-10        # epic details plus child issues
 ```
 
 ---
 
-## 11. Xem project
+## 11. Projects
 
 ```bash
-jira project list             # tất cả project có quyền truy cập
-jira project view PROJ        # chi tiết một project
-jira project issue-types PROJ # các issue type hợp lệ trong project
+jira project list             # all accessible projects
+jira project view PROJ        # project details
+jira project issue-types PROJ # valid issue types for this project
 ```
 
 ---
 
-## 12. Quản lý cấu hình (nâng cao)
+## 12. Configuration
 
 ```bash
-# Xem toàn bộ config
+# Inspect config
 jira config view
-jira config current           # context đang active
+jira config current
 
 # Server
 jira config server list
@@ -207,58 +222,64 @@ jira config server add prod --url https://prod.atlassian.net --type cloud
 
 # Credential
 jira config credential list
-jira config credential renew my-token   # làm mới token hết hạn
+jira config credential renew my-token
 
-# Context (ghép server + credential)
+# Context: server + credential
 jira config context list
-jira config context use staging         # chuyển sang môi trường khác
-jira config context test                # test kết nối active context
-jira config context test --all          # test tất cả contexts
+jira config context use staging
+jira config context test
+jira config context test --all
 ```
 
 ---
 
-## Nguyên tắc khi agent dùng
+## Agent Rules
 
-1. **Luôn dùng flags, không để interactive** — tránh terminal bị treo.
-2. **Issue key viết HOA** — `PROJ-123`, không phải `proj-123`.
-3. **Nháy kép giá trị có dấu cách** — `--status "In Progress"`, `--summary "Có dấu cách"`.
-4. **Lưu key sau khi tạo** — output trả về key mới (vd: `PROJ-456`), dùng cho bước tiếp theo nếu cần.
-5. **Lỗi 401/403** → nhắc người dùng chạy `jira config credential renew <name>`.
-6. **Lỗi "Chưa có context"** → nhắc người dùng chạy `jira login`.
-7. **Multi-env** — dùng `--context <name>` để chỉ định môi trường cụ thể.
-8. **Không chắc issue type** — chạy `jira project issue-types <PROJECT>` trước khi tạo issue.
+1. Use flags and avoid interactive prompts whenever possible.
+2. Use uppercase issue keys: `PROJ-123`, not `proj-123`.
+3. Quote values with spaces: `--status "In Progress"`, `--summary "Has spaces"`.
+4. Save newly created issue keys from command output for later steps.
+5. For 401/403 errors, ask the user to run `jira config credential renew <name>`.
+6. For "no active context" errors, ask the user to run `jira login`.
+7. Use `--context <name>` for multi-environment workflows.
+8. If the issue type is uncertain, run `jira project issue-types <PROJECT>` before creating an issue.
 
 ---
 
-## Ví dụ workflow thực tế
+## Practical Workflows
 
-### "Tìm tất cả bug đang open của tôi trong PROJ"
+### Find my open bugs in PROJ
+
 ```bash
 jira issue search --project PROJ --type Bug --assignee me --status "To Do"
 ```
 
-### "Tạo bug cho lỗi không gửi được email xác nhận"
+### Create a bug
+
 ```bash
-jira issue create --project PROJ --type Bug --summary "Không gửi được email xác nhận đăng ký"
+jira issue create --project PROJ --type Bug --summary "Confirmation email is not sent"
 ```
 
-### "Chuyển PROJ-99 sang Done"
+### Move an issue to Done
+
 ```bash
 jira issue transition PROJ-99 --status Done
 ```
 
-### "Assign PROJ-77 cho nam@company.com, set High priority, due 31/12"
+### Assign an issue, set priority, and set due date
+
 ```bash
 jira issue edit PROJ-77 --assignee nam@company.com --priority High --due 2025-12-31
 ```
 
-### "Comment vào PROJ-50 rằng đã deploy lên staging"
+### Comment that a deployment is ready for QA
+
 ```bash
-jira issue comment PROJ-50 --message "Đã deploy lên staging. Cần QA verify trước khi merge."
+jira issue comment PROJ-50 --message "Deployed to staging. QA can verify before merge."
 ```
 
-### "Xem tất cả issue trong sprint hiện tại của PROJ"
+### View current sprint issues
+
 ```bash
 jira issue search --jql 'project = PROJ AND sprint in openSprints() ORDER BY priority DESC'
 ```

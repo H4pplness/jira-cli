@@ -21,7 +21,14 @@
 
 ## Cài đặt
 
-Cài dependencies:
+Cài global từ npm:
+
+```sh
+npm install -g @h4pplness/jira-cli
+jira --help
+```
+
+Nếu phát triển local, cài dependencies:
 
 ```sh
 npm install
