@@ -49,30 +49,33 @@ function buildLoginCommand() {
         name: 'authType',
         message: 'Phương thức xác thực:',
         choices: [
-          { name: 'Basic — Email + API Token  (Jira Cloud)', value: 'basic' },
-          { name: 'PAT   — Personal Access Token  (Data Center/Server)', value: 'pat' },
+          { name: 'Basic — Email/username + password/API token', value: 'basic' },
+          { name: 'PAT   — Personal Access Token', value: 'pat' },
         ],
         default: serverAnswers.deployType === 'cloud' ? 'basic' : 'pat',
       }]);
 
       let credData;
       if (authType === 'basic') {
+        const isCloud = serverAnswers.deployType === 'cloud';
         console.log(chalk.gray(
-          '\nTạo API Token tại:\n' +
-          chalk.underline('https://id.atlassian.com/manage-profile/security/api-tokens') + '\n'
+          isCloud
+            ? '\nTạo API Token tại:\n' +
+              chalk.underline('https://id.atlassian.com/manage-profile/security/api-tokens') + '\n'
+            : '\nDùng username/email và password hoặc token nếu Jira tự host của bạn hỗ trợ Basic auth.\n'
         ));
         const ans = await inquirer.prompt([
           {
             type: 'input',
             name: 'username',
-            message: 'Email Atlassian:',
-            validate: v => v.includes('@') ? true : 'Email không hợp lệ',
+            message: isCloud ? 'Email Atlassian:' : 'Username hoặc email:',
+            validate: v => v.trim() ? true : 'Không được để trống',
             filter: v => v.trim(),
           },
           {
             type: 'password',
             name: 'secret',
-            message: 'API Token:',
+            message: isCloud ? 'API Token:' : 'Password hoặc token:',
             mask: '*',
             validate: v => v.trim() ? true : 'Không được để trống',
             filter: v => v.trim(),

@@ -1,6 +1,6 @@
 {
   "name": "@h4pplness/jira-cli",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Jira CLI — Atlassian shared config layer",
   "type": "commonjs",
   "bin": {

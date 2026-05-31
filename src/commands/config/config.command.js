@@ -55,7 +55,7 @@ function buildConfigCommand() {
     .description('Xem context đang active')
     .action(() => {
       const name = cfg.getActiveContextName();
-      if (!name) { console.log(chalk.yellow('Chưa có context active. Chạy: jira config context add')); return; }
+      if (!name) { console.log(chalk.yellow('Chưa có context active. Chạy: jira login')); return; }
       const ctx = cfg.getContext(name);
       console.log(chalk.green(`✔ Active context: ${chalk.bold(name)}`));
       console.log(chalk.gray(`  Server:     ${ctx.server}`));

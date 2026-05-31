@@ -123,7 +123,7 @@ function resolveContext(contextName) {
   const name = contextName || cfg.activeContext;
 
   if (!name) {
-    throw new Error('Chưa có context active. Chạy: jira config context add');
+    throw new Error('Chưa có context active. Chạy: jira login');
   }
 
   const ctx = (cfg.contexts || {})[name];

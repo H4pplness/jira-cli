@@ -36,18 +36,27 @@ jira login
 
 ---
 
-## 1. First Login
+## 1. Login
 
 ```bash
-jira login                    # 3-step wizard: server -> auth -> context name
+jira login                    # single login wizard: Jira type -> auth -> context
 jira login --context staging  # add another environment
 ```
 
-The wizard asks for:
+Always use `jira login` for authentication and environment setup. Do not create
+servers, credentials, and contexts manually as a separate login flow unless the
+user explicitly asks to manage config internals.
+
+The login wizard supports both Jira Cloud and self-hosted Jira. It asks for:
 - **Host URL**: for example `https://company.atlassian.net`
-- **Deployment type**: Cloud or Data Center/Server
+- **Jira type**: Cloud or Data Center/Server
 - **Auth**: Basic (email + API token) or PAT
 - **Context name**: for example `default`, `staging`, `work`
+
+Recommended combinations:
+- **Jira Cloud**: Basic auth with Atlassian email + API token
+- **Self-hosted Jira Data Center/Server**: PAT when available, or Basic if the
+  instance supports it
 
 ---
 
@@ -211,20 +220,18 @@ jira project issue-types PROJ # valid issue types for this project
 
 ## 12. Configuration
 
+Use config commands for inspection, switching contexts, testing connections, and
+renewing credentials. For new login/setup, use `jira login`.
+
 ```bash
 # Inspect config
 jira config view
 jira config current
 
-# Server
-jira config server list
-jira config server add prod --url https://prod.atlassian.net --type cloud
-
-# Credential
-jira config credential list
+# Credential maintenance
 jira config credential renew my-token
 
-# Context: server + credential
+# Context switching/testing
 jira config context list
 jira config context use staging
 jira config context test
@@ -243,6 +250,8 @@ jira config context test --all
 6. For "no active context" errors, ask the user to run `jira login`.
 7. Use `--context <name>` for multi-environment workflows.
 8. If the issue type is uncertain, run `jira project issue-types <PROJECT>` before creating an issue.
+9. Use `jira login` as the only standard login/setup flow. It covers Jira Cloud,
+   self-hosted Jira, Basic auth, and PAT.
 
 ---
 

@@ -19,10 +19,8 @@ program
 ${chalk.bold('Bắt đầu nhanh (một lệnh):')}
   ${chalk.gray('$')} jira login
 
-${chalk.bold('Hoặc cấu hình thủ công (đa môi trường):')}
-  ${chalk.gray('$')} jira config server add my-company --url https://company.atlassian.net --type cloud
-  ${chalk.gray('$')} jira config credential add my-token --type basic
-  ${chalk.gray('$')} jira config context add work --server my-company --credential my-token
+${chalk.bold('Thêm môi trường khác:')}
+  ${chalk.gray('$')} jira login --context staging
 
 ${chalk.bold('Sử dụng hàng ngày:')}
   ${chalk.gray('$')} jira issue search --project PROJ --status "In Progress"
