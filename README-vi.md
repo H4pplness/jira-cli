@@ -10,6 +10,9 @@
 - Hỗ trợ Basic auth bằng email Atlassian + API token, Personal Access Token và OAuth2 access token.
 - Tìm issue bằng JQL hoặc các filter phổ biến.
 - Xem, tạo, sửa, comment và chuyển trạng thái issue.
+- Log work và xem worklog.
+- Tìm kiếm assignee thông minh — nhận email, tên hiển thị, hoặc `me`.
+- Đường dẫn Jira thật trong mọi output.
 - Liệt kê, xem, tạo và sửa epic.
 - Liệt kê và xem chi tiết project.
 
@@ -97,6 +100,7 @@ Sửa issue:
 ```sh
 jira issue edit PROJ-123 --summary "Updated summary"
 jira issue edit PROJ-123 --assignee user@example.com --priority High --due 2026-06-30
+jira issue edit PROJ-123 --assignee "Nguyen Van A"
 ```
 
 Thêm comment:
@@ -109,6 +113,20 @@ Chuyển trạng thái issue:
 
 ```sh
 jira issue transition PROJ-123 --status Done
+```
+
+Log work:
+
+```sh
+jira issue log PROJ-123 --time "2h"
+jira issue log PROJ-123 --time "1d 4h" --message "Đã implement tính năng"
+jira issue log PROJ-123 --time "30m" --date 2026-06-01
+```
+
+Xem worklog:
+
+```sh
+jira issue worklogs PROJ-123
 ```
 
 ## Epic
@@ -233,12 +251,14 @@ jira config context use <name>
 jira config context remove <name>
 jira config context test [name] [--all]
 
-jira issue search [query] [--project <key>] [--assignee <email|me>] [--status <status>] [--type <type>] [--limit <n>] [--jql <jql>] [--context <name>]
+jira issue search [query] [--project <key>] [--assignee <email|name|me>] [--status <status>] [--type <type>] [--limit <n>] [--jql <jql>] [--context <name>]
 jira issue view <issueKey> [--comments] [--context <name>]
-jira issue create [--project <key>] [--type <type>] [--summary <text>] [--parent <key>] [--context <name>]
-jira issue edit <issueKey> [--summary <text>] [--assignee <email>] [--priority <priority>] [--due <date>] [--context <name>]
+jira issue create [--project <key>] [--type <type>] [--summary <text>] [--assignee <email|name|me>] [--parent <key>] [--context <name>]
+jira issue edit <issueKey> [--summary <text>] [--assignee <email|name|me>] [--priority <priority>] [--due <date>] [--context <name>]
 jira issue comment <issueKey> [--message <text>] [--context <name>]
 jira issue transition <issueKey> [--status <status>] [--context <name>]
+jira issue log <issueKey> [--time <timeSpent>] [--message <text>] [--date <YYYY-MM-DD>] [--context <name>]
+jira issue worklogs <issueKey> [--context <name>]
 
 jira epic list --project <key> [--limit <n>] [--context <name>]
 jira epic view <epicKey> [--context <name>]
@@ -248,7 +268,47 @@ jira epic edit <epicKey> [--summary <text>] [--due <date>] [--context <name>]
 jira project list [--context <name>]
 jira project view <projectKey> [--context <name>]
 jira project issue-types <projectKey> [--context <name>]
+
+jira install-skill [--target <agents>] [--force]
 ```
+
+## Cài skill cho AI Agent
+
+Cài đặt Jira CLI skill để AI agent tự động nhận diện và sử dụng. Các agent được hỗ trợ:
+
+| Agent | Đường dẫn skill |
+|---|---|
+| Claude Code | `~/.claude/commands/jira-cli.md` |
+| Cursor | `~/.cursor/rules/jira-cli.mdc` |
+| Windsurf | `~/.codeium/windsurf/memories/jira-cli.md` |
+
+Chế độ tương tác — tự phát hiện agent đã cài và cho bạn chọn:
+
+```sh
+jira install-skill
+```
+
+Cài cho một agent cụ thể:
+
+```sh
+jira install-skill --target claude
+jira install-skill --target cursor
+jira install-skill --target windsurf
+```
+
+Cài cho tất cả agent cùng lúc:
+
+```sh
+jira install-skill --target all
+```
+
+Cập nhật nếu đã cài rồi:
+
+```sh
+jira install-skill --target all --force
+```
+
+Sau khi cài, AI agent sẽ tự dùng jira-cli khi bạn nhắc đến Jira.
 
 ## Phát triển
 

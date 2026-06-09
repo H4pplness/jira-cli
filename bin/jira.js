@@ -8,6 +8,7 @@ const { buildConfigCommand }  = require('../src/commands/config/config.command')
 const { buildIssueCommand }   = require('../src/commands/issue/issue.command');
 const { buildEpicCommand }    = require('../src/commands/epic/epic.command');
 const { buildProjectCommand } = require('../src/commands/project/project.command');
+const { buildInstallSkillCommand } = require('../src/commands/install-skill/install-skill.command');
 
 const program = new Command();
 
@@ -40,6 +41,7 @@ program.addCommand(buildConfigCommand());
 program.addCommand(buildIssueCommand());
 program.addCommand(buildEpicCommand());
 program.addCommand(buildProjectCommand());
+program.addCommand(buildInstallSkillCommand());
 
 program.on('command:*', (op) => {
   console.error(chalk.red(`✖ Lệnh không hợp lệ: ${op[0]}`));

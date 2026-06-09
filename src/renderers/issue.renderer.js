@@ -6,9 +6,10 @@ const { colorStatus, colorPriority } = require('./table.renderer');
 const { formatDate, formatDateTime } = require('../utils/date.util');
 const { adfToText } = require('../utils/adf.util');
 
-function renderIssueDetail(issue, { showComments = false } = {}) {
+function renderIssueDetail(issue, { showComments = false, baseUrl } = {}) {
   const f = issue.fields;
   const line = '═'.repeat(70);
+  const issueUrl = baseUrl ? `${baseUrl}/browse/${issue.key}` : null;
 
   console.log('\n' + chalk.bold.cyan(line));
   console.log(
@@ -17,6 +18,7 @@ function renderIssueDetail(issue, { showComments = false } = {}) {
     (f.parent ? chalk.gray(` · Parent: ${f.parent.key}`) : '')
   );
   console.log('  ' + chalk.bold.white(f.summary));
+  if (issueUrl) console.log('  ' + chalk.underline(issueUrl));
   console.log(chalk.bold.cyan(line));
 
   // Meta table (borderless)

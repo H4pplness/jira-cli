@@ -6,7 +6,7 @@ description: |
   they do not explicitly say "jira-cli". Trigger signals include:
   - Mentions of Jira issues, tasks, bugs, stories, epics, or sprints
   - Requests to search, view, create, edit, assign, or transition Jira issues/epics
-  - Requests to add comments, change priority, or set due dates in Jira
+  - Requests to add comments, change priority, set due dates, or log work in Jira
   - Requests to list projects or inspect project details
   - Any Jira-related workflow such as "show my tasks today", "create a bug for
     this error", "move this ticket to Done", or "assign this issue to someone"
@@ -83,7 +83,7 @@ jira issue search --jql 'assignee = currentUser() AND status != Done ORDER BY up
 | Flag | Example | Notes |
 |---|---|---|
 | `--project` | `PROJ` | Project key |
-| `--assignee` | `me` or `user@email.com` | `me` becomes `currentUser()` |
+| `--assignee` | `me`, `user@email.com`, or display name | `me` = currentUser(); names are searched automatically |
 | `--status` | `"In Progress"` | Quote values with spaces |
 | `--type` | `Bug`, `Story`, `Task`, `Epic` | Must be valid for the project |
 | `--limit` | `50` | Default is 20 |
@@ -135,6 +135,10 @@ jira issue create --project PROJ --type Task --summary "Build API" \
 Important: always pass `--project`, `--type`, and `--summary` when running as an
 agent. Missing required flags trigger interactive prompts.
 
+The `--assignee` flag accepts email, display name, or `me`. The CLI automatically
+searches Jira users and resolves to the correct account. If multiple matches are
+found, the first match is used in non-interactive mode.
+
 ---
 
 ## 5. Create Epics
@@ -175,7 +179,36 @@ jira epic edit PROJ-10 --summary "New name" --due 2025-12-31
 
 ---
 
-## 8. Transition Issues
+## 8. Log Work
+
+```bash
+jira issue log PROJ-123 --time "2h"
+jira issue log PROJ-123 --time "1d 4h" --message "Implemented the feature"
+jira issue log PROJ-123 --time "30m" --date 2025-12-15
+```
+
+| Flag | Example | Notes |
+|---|---|---|
+| `--time` | `"2h"`, `"30m"`, `"1d"`, `"3h 30m"` | Required. Jira time notation: w/d/h/m |
+| `--message` | `"Did the work"` | Optional worklog comment |
+| `--date` | `2025-12-15` | Optional start date (default: today) |
+
+Always pass `--time` when running as an agent. Omitting it triggers an interactive
+prompt.
+
+---
+
+## 9. View Worklogs
+
+```bash
+jira issue worklogs PROJ-123
+```
+
+Shows all worklog entries: author, time spent, start date, and comment.
+
+---
+
+## 10. Transition Issues
 
 ```bash
 jira issue transition PROJ-123 --status "In Progress"
@@ -188,7 +221,7 @@ is case-insensitive, but use the real Jira status name when possible.
 
 ---
 
-## 9. Add Comments
+## 11. Add Comments
 
 ```bash
 jira issue comment PROJ-123 --message "Fixed, please review again."
@@ -199,7 +232,7 @@ Always use `--message` when running as an agent. Omitting it opens an editor.
 
 ---
 
-## 10. Epics In A Project
+## 12. Epics In A Project
 
 ```bash
 jira epic list --project PROJ
@@ -208,7 +241,7 @@ jira epic view PROJ-10        # epic details plus child issues
 
 ---
 
-## 11. Projects
+## 13. Projects
 
 ```bash
 jira project list             # all accessible projects
@@ -218,7 +251,7 @@ jira project issue-types PROJ # valid issue types for this project
 
 ---
 
-## 12. Configuration
+## 14. Configuration
 
 Use config commands for inspection, switching contexts, testing connections, and
 renewing credentials. For new login/setup, use `jira login`.
@@ -252,6 +285,10 @@ jira config context test --all
 8. If the issue type is uncertain, run `jira project issue-types <PROJECT>` before creating an issue.
 9. Use `jira login` as the only standard login/setup flow. It covers Jira Cloud,
    self-hosted Jira, Basic auth, and PAT.
+10. All commands output the real Jira URL (e.g. `https://company.atlassian.net/browse/PROJ-123`).
+    Use these URLs when reporting results to the user — never fabricate URLs.
+11. The `--assignee` flag accepts display names (e.g. `"Nguyen Van A"`) in addition
+    to email. The CLI searches Jira and resolves the correct user automatically.
 
 ---
 
@@ -285,6 +322,24 @@ jira issue edit PROJ-77 --assignee nam@company.com --priority High --due 2025-12
 
 ```bash
 jira issue comment PROJ-50 --message "Deployed to staging. QA can verify before merge."
+```
+
+### Log 2 hours of work
+
+```bash
+jira issue log PROJ-42 --time "2h" --message "Implemented login flow"
+```
+
+### View worklogs
+
+```bash
+jira issue worklogs PROJ-42
+```
+
+### Assign by display name
+
+```bash
+jira issue edit PROJ-77 --assignee "Nguyen Van A"
 ```
 
 ### View current sprint issues

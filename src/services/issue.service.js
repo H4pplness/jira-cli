@@ -35,7 +35,14 @@ async function createIssue({ projectKey, summary, description, issueType, assign
   };
 
   if (description) fields.description = toADF(description);
-  if (assignee)    fields.assignee    = { emailAddress: assignee };
+  if (assignee) {
+    // assignee can be { accountId }, { name }, or { emailAddress }
+    if (typeof assignee === 'object') {
+      fields.assignee = assignee;
+    } else {
+      fields.assignee = { emailAddress: assignee };
+    }
+  }
   if (priority)    fields.priority    = { name: priority };
   if (dueDate)     fields.duedate     = dueDate;
   if (labels?.length) fields.labels   = labels;
@@ -51,7 +58,13 @@ async function updateIssue(issueKey, updates = {}, { contextName } = {}) {
   if (updates.summary)     fields.summary     = updates.summary;
   if (updates.priority)    fields.priority    = { name: updates.priority };
   if (updates.dueDate)     fields.duedate     = updates.dueDate;
-  if (updates.assignee)    fields.assignee    = { emailAddress: updates.assignee };
+  if (updates.assignee) {
+    if (typeof updates.assignee === 'object') {
+      fields.assignee = updates.assignee;
+    } else {
+      fields.assignee = { emailAddress: updates.assignee };
+    }
+  }
   if (updates.labels)      fields.labels      = updates.labels;
   if (updates.description) fields.description = toADF(updates.description);
 

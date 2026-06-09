@@ -8,7 +8,14 @@ const issueService = require('../../services/issue.service');
 const projectService = require('../../services/project.service');
 const { renderIssueTable } = require('../../renderers/table.renderer');
 const { renderIssueDetail } = require('../../renderers/issue.renderer');
+const { getIssueUrl } = require('../../utils/url.util');
 const { handleError } = require('../../utils/error');
+const config = require('../../config');
+
+function getBaseUrl(contextName) {
+  try { const { server } = config.resolveContext(contextName); return server.url; }
+  catch { return null; }
+}
 
 function withContext(cmd) {
   return cmd.option('--context <name>', 'Dùng context cụ thể');
@@ -26,7 +33,8 @@ function buildEpicCommand() {
     try {
       const result = await issueService.searchIssues({ jql: `project = "${opts.project}" AND issuetype = Epic ORDER BY created DESC`, limit: parseInt(opts.limit, 10), contextName: opts.context });
       spinner.stop();
-      renderIssueTable(result.issues || []);
+      const baseUrl = getBaseUrl(opts.context);
+      renderIssueTable(result.issues || [], { baseUrl });
     } catch (err) { spinner.fail('Thất bại'); handleError(err); }
   });
 
@@ -41,10 +49,11 @@ function buildEpicCommand() {
         issueService.searchIssues({ jql: `"Epic Link" = ${key} OR parent = ${key} ORDER BY created ASC`, limit: 50, contextName: opts.context }),
       ]);
       spinner.stop();
-      renderIssueDetail(epicData);
+      const baseUrl = getBaseUrl(opts.context);
+      renderIssueDetail(epicData, { baseUrl });
       const children = childResult.issues || [];
       console.log(chalk.bold(`Issues trong epic (${children.length}):`));
-      if (children.length) renderIssueTable(children);
+      if (children.length) renderIssueTable(children, { baseUrl });
       else console.log(chalk.gray('  Không có issue nào.'));
     } catch (err) { spinner.fail('Thất bại'); handleError(err); }
   });
@@ -90,7 +99,9 @@ function buildEpicCommand() {
         dueDate:     opts.due || ans.dueDate || undefined,
         contextName: opts.context,
       });
+      const url = getIssueUrl(result.key, opts.context);
       spinner.succeed(`Epic đã tạo: ${chalk.bold.cyan(result.key)}`);
+      if (url) console.log(chalk.gray('  ') + chalk.underline(url));
     } catch (err) { handleError(err); }
   });
 
@@ -106,6 +117,8 @@ function buildEpicCommand() {
         const spinner = ora(`Đang cập nhật ${key}...`).start();
         await issueService.updateIssue(key, updates, { contextName: opts.context });
         spinner.succeed(`Đã cập nhật ${chalk.bold.cyan(key)}`);
+        const url = getIssueUrl(key, opts.context);
+        if (url) console.log(chalk.gray('  ') + chalk.underline(url));
         return;
       }
       const spinner = ora(`Đang tải ${key}...`).start();
@@ -119,6 +132,8 @@ function buildEpicCommand() {
       const saveSpinner = ora('Đang lưu...').start();
       await issueService.updateIssue(key, { summary: ans.summary, dueDate: ans.dueDate || undefined }, { contextName: opts.context });
       saveSpinner.succeed(`Đã cập nhật ${chalk.bold.cyan(key)}`);
+      const url = getIssueUrl(key, opts.context);
+      if (url) console.log(chalk.gray('  ') + chalk.underline(url));
     } catch (err) { handleError(err); }
   });
 

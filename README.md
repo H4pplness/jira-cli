@@ -10,6 +10,9 @@ A command-line Jira client for teams that work across one or more Atlassian envi
 - Basic auth with Atlassian email + API token, Personal Access Token, and OAuth2 access token configuration.
 - Issue search with JQL or common filters.
 - Issue view, create, edit, comment, and transition commands.
+- Log work and view worklogs.
+- Smart assignee search — accepts email, display name, or `me`.
+- Real Jira URLs in all command output.
 - Epic list, view, create, and edit commands.
 - Project list and detail commands.
 
@@ -97,6 +100,7 @@ Edit an issue:
 ```sh
 jira issue edit PROJ-123 --summary "Updated summary"
 jira issue edit PROJ-123 --assignee user@example.com --priority High --due 2026-06-30
+jira issue edit PROJ-123 --assignee "Nguyen Van A"
 ```
 
 Add a comment:
@@ -109,6 +113,20 @@ Transition an issue:
 
 ```sh
 jira issue transition PROJ-123 --status Done
+```
+
+Log work:
+
+```sh
+jira issue log PROJ-123 --time "2h"
+jira issue log PROJ-123 --time "1d 4h" --message "Implemented the feature"
+jira issue log PROJ-123 --time "30m" --date 2026-06-01
+```
+
+View worklogs:
+
+```sh
+jira issue worklogs PROJ-123
 ```
 
 ## Epics
@@ -233,12 +251,14 @@ jira config context use <name>
 jira config context remove <name>
 jira config context test [name] [--all]
 
-jira issue search [query] [--project <key>] [--assignee <email|me>] [--status <status>] [--type <type>] [--limit <n>] [--jql <jql>] [--context <name>]
+jira issue search [query] [--project <key>] [--assignee <email|name|me>] [--status <status>] [--type <type>] [--limit <n>] [--jql <jql>] [--context <name>]
 jira issue view <issueKey> [--comments] [--context <name>]
-jira issue create [--project <key>] [--type <type>] [--summary <text>] [--parent <key>] [--context <name>]
-jira issue edit <issueKey> [--summary <text>] [--assignee <email>] [--priority <priority>] [--due <date>] [--context <name>]
+jira issue create [--project <key>] [--type <type>] [--summary <text>] [--assignee <email|name|me>] [--parent <key>] [--context <name>]
+jira issue edit <issueKey> [--summary <text>] [--assignee <email|name|me>] [--priority <priority>] [--due <date>] [--context <name>]
 jira issue comment <issueKey> [--message <text>] [--context <name>]
 jira issue transition <issueKey> [--status <status>] [--context <name>]
+jira issue log <issueKey> [--time <timeSpent>] [--message <text>] [--date <YYYY-MM-DD>] [--context <name>]
+jira issue worklogs <issueKey> [--context <name>]
 
 jira epic list --project <key> [--limit <n>] [--context <name>]
 jira epic view <epicKey> [--context <name>]
@@ -248,7 +268,47 @@ jira epic edit <epicKey> [--summary <text>] [--due <date>] [--context <name>]
 jira project list [--context <name>]
 jira project view <projectKey> [--context <name>]
 jira project issue-types <projectKey> [--context <name>]
+
+jira install-skill [--target <agents>] [--force]
 ```
+
+## Install Skill for AI Agents
+
+Install the Jira CLI skill so AI agents can use it automatically. Supported agents:
+
+| Agent | Skill path |
+|---|---|
+| Claude Code | `~/.claude/commands/jira-cli.md` |
+| Cursor | `~/.cursor/rules/jira-cli.mdc` |
+| Windsurf | `~/.codeium/windsurf/memories/jira-cli.md` |
+
+Interactive mode — auto-detects installed agents and lets you choose:
+
+```sh
+jira install-skill
+```
+
+Install to a specific agent:
+
+```sh
+jira install-skill --target claude
+jira install-skill --target cursor
+jira install-skill --target windsurf
+```
+
+Install to all agents at once:
+
+```sh
+jira install-skill --target all
+```
+
+Update if already installed:
+
+```sh
+jira install-skill --target all --force
+```
+
+Once installed, the AI agent will recognize Jira-related requests and use jira-cli commands.
 
 ## Development
 

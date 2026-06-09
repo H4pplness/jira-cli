@@ -15,7 +15,7 @@ const PRIORITY_COLOR = {
 function colorStatus(s)   { return (STATUS_COLOR[s]   || chalk.white)(s || '—'); }
 function colorPriority(p) { return (PRIORITY_COLOR[p] || chalk.white)(p || '—'); }
 
-function renderIssueTable(issues) {
+function renderIssueTable(issues, { baseUrl } = {}) {
   if (!issues?.length) { console.log(chalk.yellow('Không tìm thấy issue nào.')); return; }
 
   const t = new Table({
@@ -39,6 +39,14 @@ function renderIssueTable(issues) {
   }
   console.log(t.toString());
   console.log(chalk.gray(`  ${issues.length} issue(s)`));
+
+  // Print real URLs for agent consumption
+  if (baseUrl) {
+    console.log('');
+    for (const i of issues) {
+      console.log(chalk.gray(`  ${i.key}: `) + chalk.underline(`${baseUrl}/browse/${i.key}`));
+    }
+  }
 }
 
 function renderProjectTable(projects) {
