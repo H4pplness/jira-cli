@@ -44,6 +44,23 @@ const AGENTS = {
     detect: () => fs.existsSync(path.join(HOME, '.codeium', 'windsurf')),
     transform: (content) => content,
   },
+  openclaw: {
+    name: 'OpenClaw',
+    // Skills sống trong một thư mục con riêng, mỗi skill có file SKILL.md
+    dir: path.join(HOME, '.openclaw', 'workspace', 'skills', 'jira-cli'),
+    file: 'SKILL.md',
+    detect: () => fs.existsSync(path.join(HOME, '.openclaw')),
+    // OpenClaw dùng đúng format SKILL.md gốc (YAML frontmatter + MD body)
+    transform: (content) => content,
+  },
+  roo: {
+    name: 'Roo Code',
+    dir: path.join(HOME, '.roo', 'rules'),
+    file: 'jira-cli.md',
+    detect: () => fs.existsSync(path.join(HOME, '.roo')),
+    // Roo Code dùng MD thuần, strip frontmatter
+    transform: (content) => stripFrontmatter(content),
+  },
 };
 
 function stripFrontmatter(content) {
@@ -79,7 +96,7 @@ function buildInstallSkillCommand() {
   cmd
     .description('Cài đặt Jira CLI skill vào AI agent trên máy cá nhân')
     .option('--force', 'Ghi đè nếu skill đã tồn tại')
-    .option('--target <agents>', 'Agent đích, phân cách bằng dấu phẩy (claude,cursor,windsurf,all)')
+    .option('--target <agents>', 'Agent đích, phân cách bằng dấu phẩy (claude,cursor,windsurf,openclaw,roo,all)')
     .action(async (opts) => {
       if (!fs.existsSync(SKILL_SOURCE)) {
         console.error(chalk.red('✖ Không tìm thấy SKILL.md trong project.'));

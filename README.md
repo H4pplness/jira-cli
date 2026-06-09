@@ -281,6 +281,8 @@ Install the Jira CLI skill so AI agents can use it automatically. Supported agen
 | Claude Code | `~/.claude/commands/jira-cli.md` |
 | Cursor | `~/.cursor/rules/jira-cli.mdc` |
 | Windsurf | `~/.codeium/windsurf/memories/jira-cli.md` |
+| OpenClaw | `~/.openclaw/workspace/skills/jira-cli/SKILL.md` |
+| Roo Code | `~/.roo/rules/jira-cli.md` |
 
 Interactive mode — auto-detects installed agents and lets you choose:
 
@@ -299,7 +301,7 @@ jira install-skill --target windsurf
 Install to all agents at once:
 
 ```sh
-jira install-skill --target all
+jira install-skill --target all  # claude,cursor,windsurf,openclaw,roo
 ```
 
 Update if already installed:
